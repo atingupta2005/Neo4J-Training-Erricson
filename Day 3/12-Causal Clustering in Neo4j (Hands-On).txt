@@ -1,0 +1,109 @@
+Identify core servers
+
+#Server 1: vm1
+dbms.connector.http.advertised_address=vm1:7474
+dbms.connector.bolt.advertised_address=vm1:7687
+causal_clustering.transaction_advertised_address=vm1:6000
+causal_clustering.raft_advertised_address=vm1:7000
+causal_clustering.discovery_advertised_address=vm1:5000
+
+causal_clustering.initial_discovery_members=vm1:5000, vm2:5000, vm3:5000
+
+
+#Server 2: vm2
+dbms.connector.http.advertised_address=vm2:7474
+dbms.connector.bolt.advertised_address=vm2:7687
+causal_clustering.transaction_advertised_address= vm2:6000
+causal_clustering.raft_advertised_address= vm2:7000
+causal_clustering.discovery_advertised_address= vm2:5000
+
+causal_clustering.initial_discovery_members=vm1:5000, vm2:5000, vm3:5000
+
+#Server 3: vm3
+dbms.connector.http.advertised_address=vm3:7474
+dbms.connector.bolt.advertised_address=vm3:7687
+causal_clustering.transaction_advertised_address=vm3:6000
+causal_clustering.raft_advertised_address=vm3:7000
+causal_clustering.discovery_advertised_address=vm3:5000
+
+causal_clustering.initial_discovery_members=vm1:5000, vm2:5000, vm3:5000
+
+#On all Core Servers:
+causal_clustering.initial_discovery_members=vm1:5000,vm2:5000,vm3:5000
+
+
+#Viewing status of the cluster
+cypher-shell -u neo4j -p secret
+
+CALL dbms.cluster.overview();
+
+
+#Seeding data for Cluster
+ # Each Neo4j instance has its own database
+ # Before seed, must unbind from cluster
+neo4j stop
+neo4j-admin unbind --verbose
+
+#Loading the data
+ # Open any node on browser:
+    http://ag-20201029-vm1:7474/browser/
+
+ # Insert some data:
+	:USE neo4j
+	CREATE (:Movie {title: 'Batman Begins'})
+	CREATE (:Movie:Action {title: 'Batman Begins'})
+	CREATE (m:Movie:Action {title: ' Batman Begins'}) RETURN m.title
+	CREATE (:Person {name: 'Michael Caine', born: 1933}), (:Person {name: 'Liam Neeson', born: 1952}), (:Person {name: 'Katie Holmes', born: 1978}), (:Person {name: 'Benjamin Melniker', born: 1913})
+
+ # Confirm that the data has been loaded into the database.
+	match(n) return n
+
+
+#Configuring read replica servers
+ # Change
+dbms.mode=CORE
+ # To
+dbms.mode=READ_REPLICA
+
+
+#Monitoring core servers
+curl -u neo4j:secret <hostname>:7474/db/<dbname>/cluster/writable
+curl -u neo4j:secret <hostname):7474/db/<dbname>/cluster/read-only
+curl -u neo4j:secret <hostname):7474/db/<dbname>/cluster/available
+curl -u neo4j:secret <hostname):7474/db/<dbname>/cluster/status  | jq '.'
+
+<hostname> is the host name of the target neo4j server
+ag-20201029-<vm1>
+ag-20201029-<vm2>
+ag-20201029-<vm3>
+<dbname> is the database of which we need to check status
+neo4j
+system
+
+#Monitoring core servers-Example
+sudo apt install jq
+<vm1>:7474/db/system/cluster/writable
+<vm1>:7474/db/system/cluster/read-only
+<vm1>:7474/db/system/cluster/available
+<vm1>:7474/db/system/cluster/status  | jq '.'
+
+#Is the core server writable?
+<vm1>:7474/db/neo4j/cluster/writable
+<vm2>:7474/db/neo4j/cluster/writable
+<vm3>:7474/db/neo4j/cluster/writable
+<vm4>:7474/db/neo4j/cluster/writable
+<vm5>:7474/db/neo4j/cluster/writable
+
+#Understanding quorum
+CALL dbms.cluster.overview();
+
+ # Stop the core server that is the LEADER.
+ # View the cluster overview using another neo4j server:
+dbms.cluster.overview();
+
+#Backup using a read replica
+CALL dbms.listTransactions() YIELD transactionId;
+
+neo4j-admin backup --backup-dir=<backup-path> --name=<backup-name> --from=<core-server:backup-port> --protocol=catchup --check-consistency=true
+
+

@@ -1,0 +1,155 @@
+------------VM Creation in Azure-----------
+Virtual machine name: <YourFirstName>neo4jclustervm11
+Resource Group: <YourFirstName>Erricson
+Region: West US
+Image: Ubuntu 18.0.4 LTS- Gen1
+Size: B2S
+Authentication Type: Password
+Username: <YourName>
+Password: Azure@123456
+OS DIsk Type: Standard HDD
+Virtual Network: <YourFirstName>-VNet
+Subnet: default
+Public IP: New (Default) - No change
+NSG: Chose - Advanced - <YourFirstName>Neo4J-vm-nsg
+
+#Create Machine
+
+After creation:
+Open VM
+ - DNS name Configure
+   - DNS name label: <VMName>
+
+
+------------Note VM Details---------------------
+atingupta-20201027-vm4.eastus.cloudapp.azure.com
+
+
+---------------------------------------------
+
+----------------Install Neo4J----------------
+#Note: Below instruntions are to be followed for each VM
+sudo apt -y update && sudo apt -y upgrade
+sudo apt install -y curl wget gosu jq htop tree vim openjdk-11-jdk
+
+export NEO4J_HOME="/var/lib/neo4j"
+
+sudo addgroup --gid 7474 --system neo4j
+sudo adduser --uid 7474 --system --no-create-home --home "${NEO4J_HOME}" --ingroup neo4j neo4j
+
+wget https://dist.neo4j.org/neo4j-enterprise-4.1.3-unix.tar.gz
+sudo tar --extract --file neo4j-enterprise-4.1.3-unix.tar.gz --directory /var/lib
+
+sudo mv /var/lib/neo4j-* "${NEO4J_HOME}"
+sudo mv "${NEO4J_HOME}"/data /data
+sudo mv "${NEO4J_HOME}"/logs /logs
+
+sudo chown -R neo4j:neo4j /data
+sudo chmod -R 777 /data
+sudo chown -R neo4j:neo4j /logs
+sudo chmod -R 777 /logs
+sudo chown -R neo4j:neo4j "${NEO4J_HOME}"
+sudo chmod -R 777 "${NEO4J_HOME}"
+
+ln -s /data "${NEO4J_HOME}"/data
+ln -s /logs "${NEO4J_HOME}"/logs
+
+git config --global user.name `hostname` && git config --global user.email `hostname`@mail.com
+cd $NEO4J_HOME/conf && git init && git add * && git commit -am "-"
+
+vim $NEO4J_HOME/bin/restart-neo4j.sh
+ cd $NEO4J_HOME/conf && git add * && git commit -am "-"
+ export NEO4J_EDITION=enterprise
+ export NEO4J_HOME="/var/lib/neo4j"
+ export NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+ PATH="${NEO4J_HOME}"/bin:$PATH
+ ulimit -n 60000
+ neo4j stop
+ neo4j start
+:wq
+
+$NEO4J_HOME/bin/restart-neo4j.sh
+tail -f -n 200 /logs/debug.log
+tail -f -n 200 /logs/neo4j.log
+
+-------------------------------------------------
+
+------------Configure Neo4J VM node to join a Cluster-------
+# Note: The below configuration need to be pasted in $NEO4J_HOME/conf/neo4j.conf
+# Note: Also need to change the Host Name as per the current VM
+
+#------VM1--------
+neo4j stop
+cd $NEO4J_HOME/conf && git add * && git commit -am "-"
+vim $NEO4J_HOME/conf/neo4j.conf
+
+#Put below code at the bottom of file opened
+#--Note: Make sure to change below details to replace the Host Name of current VM
+
+dbms.default_listen_address=0.0.0.0
+
+dbms.memory.pagecache.size=512M
+
+dbms.tx_log.rotation.retention_policy=100M size
+dbms.mode=READ_REPLICA
+dbms.directories.logs=/logs
+causal_clustering.discovery_type=LIST
+
+#Change
+
+dbms.connector.http.advertised_address=atingupta-20201027-vm4.eastus.cloudapp.azure.com:7474
+dbms.connector.bolt.advertised_address=atingupta-20201027-vm4.eastus.cloudapp.azure.com:7687
+causal_clustering.transaction_advertised_address=atingupta-20201027-vm4.eastus.cloudapp.azure.com:6000
+causal_clustering.raft_advertised_address=atingupta-20201027-vm4.eastus.cloudapp.azure.com:7000
+
+causal_clustering.initial_discovery_members=atingupta-20201027-vm1.eastus.cloudapp.azure.com:5000,atingupta-20201027-vm2.eastus.cloudapp.azure.com:5000,atingupta-20201027-vm3.eastus.cloudapp.azure.com:5000
+
+causal_clustering.discovery_advertised_address=atingupta-20201027-vm4.eastus.cloudapp.azure.com:5000
+
+
+#Code paste ends here
+:wq
+
+cd $NEO4J_HOME/conf && git add * && git commit -am "-"
+
+neo4j stop
+#rm -rf /data/databases/neo4j && rm -rf transactions/neo4j
+#rm -rf /data/databases/system && rm -rf transactions/system
+#Restart Neo4J server
+restart-neo4j.sh
+tail -f -n 200 /logs/debug.log
+tail -f -n 200 /logs/neo4j.log
+
+-----------------------------------------------
+
+----------Testing------------------------------
+#Wait for 2-3 min
+# On each node:
+ curl localhost:7474    				# Should show JSON output
+ tail -f -n 200 /logs/debug.log		# Inspect Logs for any errors
+ tail -f -n 200 /logs/neo4j.log		# Inspect Logs for any errors
+ 
+ Browse - http://<HostName>:7474/browser/
+  - Login using Bolt Protocol
+
+
+--------------Troubleshooting-----------
+
+Refer:
+https://community.neo4j.com/t/causal-cluster-not-forming/2491
+
+# In case any cluster node doesn't start and curl localhost:7474 is refusing connection
+ neo4j stop
+ rm -rf /data/databases/neo4j
+ rm -rf /data/transactions/neo4j
+ restart-neo4j.sh
+ tail -f -n 200 /logs/debug.log
+ tail -f -n 200 /logs/neo4j.log
+ curl localhost:7474    				# Should show JSON output
+
+-----------------------------------------------------
+
+-----------Cluster related commands-------------------
+:sysinfo
+CALL dbms.cluster.overview();
+

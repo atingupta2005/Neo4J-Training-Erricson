@@ -1,0 +1,13 @@
+embed = new GraphDatabaseFactory().newEmbeddedDatabase(NEO4J_DB_PATH );
+Node node = embed.createNode();
+node.setProperty("name","Neo4j");
+node.setProperty("Message","Hello World");
+System.out.print( node.getProperty( "name" ) );
+System.out.print( node.getProperty( "message" ) );
+node.delete();
+node1 = embed.createNode();
+node1.setProperty("name","A");
+node2 = embed.createNode();
+node2.setProperty("name","B");
+rel = node1.createRelationshipTo( node2, RelTypes.KNOWS );
+rel.setProperty("type","Friend");
