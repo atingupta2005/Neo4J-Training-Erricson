@@ -7,7 +7,10 @@
  - match (Yoav:Person{name:"Yoav"})-[:liked]->(movie:Movie), (Yoav)-[:watched]->(movie), (Yoav)-[:other]->(movie) return movie
 
 # Setup Neo4J using Docker
- - Refer: https://neo4j.com/docs/operations-manual/current/docker/
+ - Refer
+	- https://neo4j.com/docs/operations-manual/current/docker/
+	- https://github.com/atingupta2005/Neo4J-Training-Erricson/blob/master/Day%203/12-Causal%20Clustering%20in%20Neo4j-A-Via%20Docker.txt
+ 
 
 # How to take help of all available commands in Cypher-shell. We need to take help like linux man pages
  - Need to explore
