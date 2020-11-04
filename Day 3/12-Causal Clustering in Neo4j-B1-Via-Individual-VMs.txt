@@ -81,8 +81,7 @@ vim ~/restart-neo4j.sh
 :wq
 
 chmod a+x ~/restart-neo4j.sh
-~/restart-neo4j.sh
-restart-neo4j.sh
+. ~/restart-neo4j.sh
 tail -f -n 200 /logs/debug.log
 tail -f -n 200 /logs/neo4j.log
 
