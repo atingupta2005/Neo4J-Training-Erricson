@@ -56,7 +56,7 @@ export NEO4J_HOME="/var/lib/neo4j"
 sudo addgroup --gid 7474 --system neo4j
 sudo adduser --uid 7474 --system --no-create-home --home "${NEO4J_HOME}" --ingroup neo4j neo4j
 
-wget https://dist.neo4j.org/neo4j-enterprise-4.1.3-unix.tar.gz
+sudo wget https://dist.neo4j.org/neo4j-enterprise-4.1.3-unix.tar.gz
 sudo tar --extract --file neo4j-enterprise-4.1.3-unix.tar.gz --directory /var/lib
 
 sudo mv /var/lib/neo4j-* "${NEO4J_HOME}" && sudo mv "${NEO4J_HOME}"/data /data && sudo mv "${NEO4J_HOME}"/logs /logs
@@ -80,7 +80,8 @@ vim ~/restart-neo4j.sh
  neo4j start
 :wq
 
-restart-neo4j.sh
+chmod a+x ~/restart-neo4j.sh
+. ~/restart-neo4j.sh
 tail -f -n 200 /logs/debug.log
 tail -f -n 200 /logs/neo4j.log
 
