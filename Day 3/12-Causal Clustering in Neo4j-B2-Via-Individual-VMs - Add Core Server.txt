@@ -108,6 +108,11 @@ causal_clustering.expected_core_cluster_size=3
 #Code paste ends here
 :wq
 
+# To check connectivity between machines:
+telnet <hostname1> 5000
+telnet <hostname2> 5000
+telnet <hostname3> 5000
+
 cd $NEO4J_HOME/conf && git add * && git commit -am "-"
 
 neo4j stop
