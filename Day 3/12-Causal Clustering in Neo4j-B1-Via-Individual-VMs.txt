@@ -127,13 +127,14 @@ https://community.neo4j.com/t/causal-cluster-not-forming/2491
  neo4j stop
  rm -rf /data/databases/neo4j
  rm -rf /data/transactions/neo4j
- restart-neo4j.sh
+ . ~/restart-neo4j.sh
  tail -f -n 200 /logs/debug.log
  tail -f -n 200 /logs/neo4j.log
  curl localhost:7474    				# Should show JSON output
 
 neo4j stop && neo4j-admin unbind
 restart-neo4j.sh &
+tail -f -n 200 /logs/debug.log
 tail -f -n 200 /logs/debug.log
 
 -----------------------------------------------------
