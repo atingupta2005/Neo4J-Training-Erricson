@@ -1,4 +1,4 @@
-# Java Documentation
+# Java Documentation for create Nodes from Java code
  - https://github.com/neo4j/neo4j-documentation/tree/4.1/embedded-examples
 
 
@@ -64,7 +64,7 @@
 	- :sysinfo
 
 # Some exta material
-  # Data Profiling: A Holistic View of Data using Neo4j
+  - Data Profiling: A Holistic View of Data using Neo4j
    - https://neo4j.com/blog/data-profiling-holistic-view-neo4j/
 
 
