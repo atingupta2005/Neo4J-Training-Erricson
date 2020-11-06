@@ -74,3 +74,7 @@ https://neo4j.com/developer/kb/checkpointing-and-log-pruning-interactions/#:~:te
 # Space Reclaim:
 https://neo4j.com/docs/operations-manual/current/performance/space-reuse/
 
+
+# How to generate reports in Docker?
+  - Install the below package:
+    - apt-get install --reinstall procps
