@@ -68,3 +68,9 @@
     - https://neo4j.com/blog/data-profiling-holistic-view-neo4j/
 
 
+# Checkpoint:
+https://neo4j.com/developer/kb/checkpointing-and-log-pruning-interactions/#:~:text=Overview,time%20after%20an%20improper%20shutdown.
+
+# Space Reclaim:
+https://neo4j.com/docs/operations-manual/current/performance/space-reuse/
+
